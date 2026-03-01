@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+backend/venv/
+.env
+
+# Node.js
+node_modules/
+dashboard/node_modules/
+dist/
+dashboard/dist/
+.eslintcache
+
+# Project Specific
+openmind.db
+backend_logs.txt
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
