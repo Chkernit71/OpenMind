@@ -11,10 +11,20 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 def get_ai_client():
-    return AsyncOpenAI(
-        api_key=os.getenv("GITHUB_TOKEN"),
-        base_url="https://models.inference.ai.azure.com"
-    )
+    load_dotenv(override=True)  # Reload .env on every call so token changes take effect
+    openai_key = os.getenv("OPENAI_API_KEY")
+    if openai_key:
+        # Use real OpenAI (no daily limit, pay per use ~$0.0001/chat)
+        logger.info("Using real OpenAI API")
+        return AsyncOpenAI(api_key=openai_key)
+    else:
+        # Use GitHub Models (50 req/day free)
+        github_token = os.getenv("GITHUB_TOKEN")
+        logger.info(f"Using GitHub Models API with token: {github_token[:10]}...")
+        return AsyncOpenAI(
+            api_key=github_token,
+            base_url="https://models.inference.ai.azure.com"
+        )
 
 async def generate_response(db: AsyncSession, site_id: int, conversation_id: int, user_message: str):
     # Fetch site configuration

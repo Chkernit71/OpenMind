@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+import os
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from typing import List
@@ -73,7 +74,11 @@ async def list_sites(
     current_user: models.User = Depends(get_current_user)
 ):
     result = await db.execute(select(models.Site).filter(models.Site.owner_id == current_user.id))
-    return result.scalars().all()
+    sites = result.scalars().all()
+    backend_url = os.getenv("BACKEND_URL", "http://localhost:8000")
+    for s in sites:
+        s.backend_url = backend_url
+    return sites
 
 @router.get("/{site_id}", response_model=schemas.Site)
 async def get_site(
@@ -85,6 +90,7 @@ async def get_site(
     db_site = result.scalars().first()
     if not db_site:
         raise HTTPException(status_code=404, detail="Site not found")
+    db_site.backend_url = os.getenv("BACKEND_URL", "http://localhost:8000")
     return db_site
 
 @router.delete("/{site_id}")
@@ -168,3 +174,37 @@ async def get_conversation_messages(
     )
     conversation.messages = msg_result.scalars().all()
     return conversation
+
+@router.get("/{id}/conversations/active", response_model=List[schemas.Conversation])
+async def get_active_conversations(
+    id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    # Verify ownership
+    site_result = await db.execute(select(models.Site).filter(models.Site.id == id, models.Site.owner_id == current_user.id))
+    if not site_result.scalars().first():
+        raise HTTPException(status_code=404, detail="Site not found")
+    
+    from datetime import datetime, timedelta
+    yesterday = datetime.utcnow() - timedelta(days=1)
+    
+    result = await db.execute(
+        select(models.Conversation)
+        .filter(models.Conversation.site_id == id, models.Conversation.updated_at >= yesterday)
+        .order_by(models.Conversation.updated_at.desc())
+    )
+    conversations = result.scalars().all()
+    
+    # Eager load last message for each
+    for conv in conversations:
+        msg_result = await db.execute(
+            select(models.Message)
+            .filter(models.Message.conversation_id == conv.id)
+            .order_by(models.Message.created_at.desc())
+            .limit(1)
+        )
+        last_msg = msg_result.scalars().first()
+        conv.messages = [last_msg] if last_msg else []
+        
+    return conversations

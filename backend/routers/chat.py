@@ -52,6 +52,20 @@ async def chat_message(
             db, site.id, conversation.id, request.message
         )
         
+        # Broadcast to live monitor
+        from backend.services.ws_manager import manager
+        from datetime import datetime
+        
+        await manager.broadcast_to_site(site.id, {
+            "type": "new_message",
+            "conversation_id": conversation.id,
+            "visitor_id": request.visitor_id,
+            "user_message": request.message,
+            "bot_reply": ai_response_content,
+            "timestamp": datetime.utcnow().isoformat(),
+            "site_id": site.id
+        })
+        
         # Fetch the latest message (the one we just saved in generate_response)
         msg_result = await db.execute(
             select(models.Message)

@@ -4,6 +4,17 @@ import { useQuery } from '@tanstack/react-query';
 import client from '../api/client';
 import { ChevronLeft, Send, Bot, User, RefreshCw, Copy, Check, Loader2, Globe, Sparkles, CheckCircle2 } from 'lucide-react';
 
+const getBackendURL = (site) => {
+    // If backend provided a specific URL, use it
+    if (site?.backend_url) return site.backend_url;
+
+    // Fallback logic
+    if (window.location.port === '8080' || !window.location.port) {
+        return window.location.origin;
+    }
+    return 'http://192.168.1.21:8000';
+};
+
 export default function ChatPreview() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -101,10 +112,32 @@ export default function ChatPreview() {
     };
 
     const copyEmbedCode = () => {
-        const code = `<script \n  src="http://localhost:8000/widget.js"\n  data-key="${site?.api_key}"\n  async>\n</script>`;
-        navigator.clipboard.writeText(code);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        const backendUrl = getBackendURL(site);
+        const code = `<script \n  src="${backendUrl}/widget.js"\n  data-key="${site?.api_key}"\n  async>\n</script>`;
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(code);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } else {
+            // Fallback for non-secure contexts (HTTP over IP)
+            const textArea = document.createElement("textarea");
+            textArea.value = code;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            } catch (err) {
+                console.error('Fallback copy failed', err);
+            }
+            document.body.removeChild(textArea);
+        }
     };
 
     if (isLoading) return <div className="p-8 text-center text-gray-500">Loading playground...</div>;
@@ -173,7 +206,7 @@ export default function ChatPreview() {
                         <p className="text-xs text-gray-500 mb-3">Add this script to your website's <code>&lt;head&gt;</code> tag:</p>
                         <div className="relative group">
                             <pre className="bg-gray-900 text-indigo-300 p-4 rounded-lg text-[10px] items-center overflow-x-auto font-mono">
-                                {`<script \n  src="http://localhost:8000/widget.js"\n  data-key="${site.api_key}"\n  async>\n</script>`}
+                                {`<script \n  src="${getBackendURL(site)}/widget.js"\n  data-key="${site.api_key}"\n  async>\n</script>`}
                             </pre>
                             <button
                                 onClick={copyEmbedCode}

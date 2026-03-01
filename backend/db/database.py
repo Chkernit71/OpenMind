@@ -5,7 +5,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./openmind.db")
+APP_ENV = os.getenv("APP_ENV", "development")
+
+if APP_ENV == "production":
+    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./openmind_prod.db")
+else:
+    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./openmind.db")
 
 # For PostgreSQL, we MUST use the asyncpg driver
 if DATABASE_URL.startswith("postgresql://"):

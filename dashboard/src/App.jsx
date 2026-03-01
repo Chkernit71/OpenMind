@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import ConnectSite from './pages/ConnectSite';
 import Conversations from './pages/Conversations';
 import ChatPreview from './pages/ChatPreview';
+import Monitoring from './pages/Monitoring';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 
@@ -31,6 +32,7 @@ function App() {
                       <Route path="/connect" element={<ConnectSite />} />
                       <Route path="/conversations/:siteId" element={<Conversations />} />
                       <Route path="/sites/:id/preview" element={<ChatPreview />} />
+                      <Route path="/sites/:id/monitor" element={<Monitoring />} />
                     </Routes>
                   </ProtectedRoute>
                 }

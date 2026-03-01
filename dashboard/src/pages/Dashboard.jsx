@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import client from '../api/client';
 import { Link } from 'react-router-dom';
-import { Plus, Globe, MessageSquare, RefreshCw, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Plus, Globe, MessageSquare, RefreshCw, AlertCircle, CheckCircle2, Loader2, Activity } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 function SiteCard({ site }) {
@@ -88,6 +88,13 @@ function SiteCard({ site }) {
                     title="Preview AI Chat"
                 >
                     <Globe size={16} /> Preview
+                </Link>
+                <Link
+                    to={`/sites/${site.id}/monitor`}
+                    className="flex items-center gap-1 text-sm text-amber-600 hover:text-amber-500"
+                    title="Live Monitor"
+                >
+                    <Activity size={16} /> Monitor
                 </Link>
                 <button
                     onClick={() => recrawlMutation.mutate()}

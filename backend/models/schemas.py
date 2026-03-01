@@ -39,6 +39,7 @@ class Site(SiteBase):
     status: str
     api_key: str
     crawled_content: Optional[str] = None
+    backend_url: Optional[str] = None
     created_at: datetime
     class Config:
         from_attributes = True
@@ -78,6 +79,7 @@ class ConversationBase(BaseModel):
 class Conversation(ConversationBase):
     id: int
     created_at: datetime
+    updated_at: datetime
     messages: List[Message] = []
     class Config:
         from_attributes = True

@@ -39,6 +39,7 @@ class Content(Base):
     title = Column(String)
     text_content = Column(Text, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
     site = relationship("Site", back_populates="contents")
 
@@ -48,6 +49,7 @@ class Conversation(Base):
     site_id = Column(Integer, ForeignKey("sites.id"))
     visitor_id = Column(String) # For identifying visitors across sessions
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
     site = relationship("Site", back_populates="conversations")
     messages = relationship("Message", back_populates="conversation")
