@@ -147,7 +147,7 @@
         widget.className = 'closed';
         widget.innerHTML = `
             <div id="openmind-header">
-                <span>Chat with AI</span>
+                <span id="openmind-bot-name">Chat with AI</span>
                 <button id="openmind-close" style="background:transparent;border:none;color:white;cursor:pointer;font-size:20px;">×</button>
             </div>
             <div id="openmind-messages"></div>
@@ -168,12 +168,30 @@
         // State
         let visitorId = localStorage.getItem('om_visitor_id') || Math.random().toString(36).substring(7);
         localStorage.setItem('om_visitor_id', visitorId);
+        let greetingShown = false;
 
         // DOM Elements
         const input = document.getElementById('openmind-input');
         const sendBtn = document.getElementById('openmind-send');
         const messagesContainer = document.getElementById('openmind-messages');
         const closeBtn = document.getElementById('openmind-close');
+        const botNameEl = document.getElementById('openmind-bot-name');
+
+        // Fetch bot config and show greeting
+        async function loadGreeting() {
+            if (greetingShown) return;
+            greetingShown = true;
+            try {
+                const res = await fetch(`${backendUrl}/chat/config?api_key=${apiKey}`);
+                if (res.ok) {
+                    const config = await res.json();
+                    if (config.bot_name) botNameEl.textContent = config.bot_name;
+                    if (config.bot_greeting) addMessage(config.bot_greeting, 'ai');
+                }
+            } catch (e) {
+                addMessage('Hello! How can I help you today?', 'ai');
+            }
+        }
 
         // Functions
         function addMessage(text, role) {
@@ -220,6 +238,7 @@
         toggle.onclick = () => {
             widget.classList.toggle('closed');
             toggle.style.display = 'none';
+            loadGreeting();
         };
 
         closeBtn.onclick = () => {

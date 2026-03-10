@@ -71,10 +71,26 @@ if os.path.exists(DASHBOARD_DIR):
     
     @app.get("/{full_path:path}")
     async def serve_spa(request: Request, full_path: str):
-        # Don't intercept API or widget routes
-        if full_path.startswith(("api/", "auth/", "sites/", "chat/", "billing/", "ws/", "static/")):
+        # Don't intercept API or widget routes, but allow SPA paths like /sites/11/preview or /sites
+        is_api_route = full_path.startswith(("auth/", "chat/", "billing/", "ws/", "static/"))
+        
+        # Determine if it's an API request to /sites or a page load
+        if full_path.startswith("sites/"):
+            # If it's to /sites/id/preview, it's a frontend route
+            if "/preview" in full_path or full_path == "sites" or full_path == "sites/":
+                is_api_route = False
+            else:
+                # If they are requesting HTML, it's a direct browser navigation to the SPA
+                accept = request.headers.get("accept", "")
+                if "text/html" in accept:
+                    is_api_route = False
+                else:
+                    is_api_route = True
+                    
+        if is_api_route:
             from fastapi import HTTPException
             raise HTTPException(status_code=404)
+            
         index_path = os.path.join(DASHBOARD_DIR, "index.html")
         if os.path.exists(index_path):
             return _FileResponse(index_path)

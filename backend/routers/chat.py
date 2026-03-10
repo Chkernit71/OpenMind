@@ -9,6 +9,21 @@ from backend.services import ai as ai_service
 router = APIRouter(prefix="/chat", tags=["chat"])
 logger = logging.getLogger(__name__)
 
+@router.get("/config")
+async def get_chat_config(api_key: str, db: AsyncSession = Depends(get_db)):
+    """Public endpoint: returns bot name and greeting for a given API key."""
+    result = await db.execute(
+        select(models.Site).filter(models.Site.api_key == api_key)
+    )
+    site = result.scalars().first()
+    if not site:
+        raise HTTPException(status_code=404, detail="Site not found")
+    return {
+        "bot_name": site.bot_name or "Assistant",
+        "bot_greeting": site.bot_greeting or "Hello! How can I help you today?"
+    }
+
+
 async def verify_api_key(x_api_key: str = Header(...), db: AsyncSession = Depends(get_db)):
     # Ensure we load all necessary fields
     result = await db.execute(
